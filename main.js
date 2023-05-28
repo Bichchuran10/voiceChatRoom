@@ -1,4 +1,4 @@
-const appid = "yourappid";
+const appid = "6d20097619b64660aae9eb3256874ea8";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import AgoraRTM from "agora-rtm-sdk";
 const token = null;
@@ -21,6 +21,11 @@ let channel;
 const initRtm = async (name) => {
   rtmClient = AgoraRTM.createInstance(appid);
   await rtmClient.login({ uid: rtmUid, token: token });
+
+  rtmClient.addOrUpdateLocalUserAttributes({
+    name: name,
+    userRtcUid: rtcUid.toString(),
+  });
   channel = rtmClient.createChannel(roomId);
   await channel.join();
   getChannelMembers();
@@ -48,7 +53,7 @@ const initRtc = async () => {
   //       `<div class="speaker user-rtc-${rtcUid}" id="${rtcUid}"><p>${rtcUid}</p></div>`
   //     );
 
-  //   initVolumeIndicator();
+  initVolumeIndicator();
 };
 
 let initVolumeIndicator = async () => {
@@ -102,11 +107,15 @@ let handleUserLeft = async (user) => {
 };
 
 let handleMemberJoined = async (MemberId) => {
+  let { name, userRtcUid } = await rtmClient.getUserAttributesByKeys(MemberId, [
+    "name",
+    "userRtcUid",
+  ]);
   document
     .getElementById("members")
     .insertAdjacentHTML(
       "beforeend",
-      `<div class="speaker user-rtc-${"---"}" id="${MemberId}"><p>${MemberId}</p></div>`
+      `<div class="speaker user-rtc-${userRtcUid}" id="${MemberId}"><p>${name}</p></div>`
     );
 };
 
@@ -120,9 +129,13 @@ let getChannelMembers = async () => {
 
   //2
   for (let i = 0; members.length > i; i++) {
+    let { name, userRtcUid } = await rtmClient.getUserAttributesByKeys(
+      members[i],
+      ["name", "userRtcUid"]
+    );
     let newMember = `
-      <div class="speaker user-rtc-${"-----"}" id="${members[i]}">
-          <p>${members[i]}</p>
+      <div class="speaker user-rtc-${userRtcUid}" id="${members[i]}">
+          <p>${name}</p>
       </div>`;
 
     document
@@ -150,9 +163,9 @@ let lobbyForm = document.getElementById("form");
 const enterRoom = async (e) => {
   e.preventDefault();
 
-  let displayName = "";
+  let displayName = e.target.displayname.value;
   initRtc();
-  initRtm();
+  initRtm(displayName);
 
   lobbyForm.style.display = "none";
   document.getElementById("room-header").style.display = "flex";
