@@ -1,4 +1,4 @@
-const appid = "6d20097619b64660aae9eb3256874ea8";
+const appid = "yourappid";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import AgoraRTM from "agora-rtm-sdk";
 const token = null;
